@@ -1,0 +1,29 @@
+*.csproj
+*.pidb
+*.unityproj
+Temp
+/Library
+*.sln
+*.userprefs
+iOS Build/Libraries
+iOS Build/Data
+iOS Build/Unity-iPhone.xcodeproj
+Video
+*.apk
+Viewpoint.app
+Viewpoint.exe
+Viewpoint_Data
+NeededForSpineExport.png
+tags
+Assembly-CSharp-vs.csproj.FilesWrittenAbsolute.txt
+obj/Debug/Assembly-CSharp.dll
+obj/Debug/Assembly-CSharp.dll.mdb
+obj/Debug/Assembly-CSharp-Editor-firstpass-vs.csproj.FilesWrittenAbsolute.txt
+obj/Debug/Assembly-CSharp-Editor-firstpass.dll
+obj/Debug/Assembly-CSharp-Editor-firstpass.dll.mdb
+obj/Debug/Assembly-CSharp-firstpass-vs.csproj.FilesWrittenAbsolute.txt
+obj/Debug/Assembly-CSharp-firstpass.dll
+obj/Debug/Assembly-CSharp-firstpass.dll.mdb
+BetterEditorPrefs.asset
+launch.json
+/obj
