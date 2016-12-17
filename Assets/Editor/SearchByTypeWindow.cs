@@ -13,6 +13,8 @@ public class SearchByTypeWindow : EditorWindow
 
     Vector2 searchResultsScrollPosition;
 
+
+    string selected;
 	
 	
 	[MenuItem("Window/Search By Type &g")]
@@ -35,12 +37,36 @@ public class SearchByTypeWindow : EditorWindow
         searchResultsScrollPosition = GUILayout.BeginScrollView(searchResultsScrollPosition);
 		foreach (string guid in lastSearch) 
         {
-            var path =AssetDatabase.GUIDToAssetPath(guid);
-            if(GUILayout.Button(path))
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            //MenuItemStyle = new GUIStyle(GUI.skin.button);
+            GUIStyle style = new GUIStyle(GUI.skin.button);
+            //style.normal.background = EditorGUIUtility.whiteTexture;
+            //GUI.backgroundColor = Color.white;
+            //
+            //
+
+            if(guid == selected)
+            {
+                GUI.backgroundColor = Color.blue;
+            }
+            else
+            {
+                GUI.backgroundColor = Color.white;
+            }
+            var rect = EditorGUILayout.BeginHorizontal(style);
+
+            EditorGUILayout.LabelField(path);
+
+
+            if(Event.current.type == EventType.MouseUp && rect.Contains(Event.current.mousePosition))
             {
                 Debug.Log (path);
                 Selection.activeObject = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
+                selected = guid;
+                Repaint();
             }
+
+            EditorGUILayout.EndHorizontal();
 		}
         GUILayout.EndScrollView();
 	}
