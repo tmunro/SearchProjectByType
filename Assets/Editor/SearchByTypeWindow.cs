@@ -82,12 +82,11 @@ public class SearchByTypeWindow : EditorWindow
         // Only check for a component type if t: appears in the search string
         // AND it isn't one of our keywords (other built in asset type searches)
         //
-        var searchByType = false;
         if(searchString.Contains("t:") && !FILTER_KEYWORDS.Any(searchString.Contains))
         {
             var typeName = searchString.Substring(searchString.IndexOf("t:") + 2);
             Debug.Log("Type: "+typeName);
-            searchString = searchString.Replace(typeName, "Prefab");
+            searchString = searchString.Replace("t:"+typeName, "t:Prefab");
             Debug.Log("Search: "+searchString);
 
             // Taken from http://stackoverflow.com/questions/11107536/convert-string-to-type-in-c-sharp
@@ -101,7 +100,6 @@ public class SearchByTypeWindow : EditorWindow
                 type = types.FirstOrDefault(x => x.Name.StartsWith(typeName));
             }
 
-
             if(type == null)
             {
                 lastSearch.Clear();
@@ -110,17 +108,20 @@ public class SearchByTypeWindow : EditorWindow
 
             Debug.Log(type.Name);
 
-
-
             // Only search for prefabs, since they are the only assets that can contain components
             // We'll eventually want to filter for scriptable objects as well
             lastSearch = AssetDatabase.FindAssets (searchString)
                 .Where(x => AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(x)).GetComponent(type) != null)
                 .ToList();
         }
+        else
+        {
+            lastSearch = AssetDatabase.FindAssets (searchString)
+                .ToList();
+        }
 
 	}
 
-    readonly string[] FILTER_KEYWORDS = {"t:Scene", "t:Material"};
+    readonly string[] FILTER_KEYWORDS = {"t:Animation", "t:AudioClip", "t:Font", "t:GUISkin", "t:Mesh", "t:Model", "t:PhysicMaterial", "t:Script", "t:Shader", "t:Texture", "t:Scene", "t:Material"};
 
 }
