@@ -8,6 +8,7 @@ public class SearchByTypeWindow : EditorWindow
 {
 	string filterString;
     string selected;
+    int selectedIndex = -1;
 
     string searchingForType;
 
@@ -56,12 +57,15 @@ public class SearchByTypeWindow : EditorWindow
         style.padding.bottom = -4;
 
         searchResultsScrollPosition = GUILayout.BeginScrollView(searchResultsScrollPosition);
-		foreach (string guid in lastSearch)
+		for(var i = 0; i < lastSearch.Count; i++)
         {
+            var guid = lastSearch[i];
             var path = AssetDatabase.GUIDToAssetPath(guid);
 
-            if(guid == selected)
+            if(guid == selected || i == selectedIndex)
             {
+                Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
+                selected = guid;
                 GUI.backgroundColor = new Color(0.25f, 0.5f, 0.9f);
                 style.normal.textColor = Color.white;
             }
@@ -88,13 +92,32 @@ public class SearchByTypeWindow : EditorWindow
             if(Event.current.type == EventType.MouseUp && rect.Contains(Event.current.mousePosition))
             {
                 Debug.Log (path);
-                Selection.activeObject = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                GUI.FocusControl("");
+                Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
                 selected = guid;
+                selectedIndex = i;
                 Repaint();
             }
 
             EditorGUILayout.EndHorizontal();
 		}
+
+        if(Event.current.type == EventType.KeyDown)
+        {
+            if(Event.current.keyCode == KeyCode.DownArrow)
+            {
+                Event.current.Use();
+                selectedIndex++;
+                Repaint();
+            }
+            else if(Event.current.keyCode == KeyCode.UpArrow)
+            {
+                Event.current.Use();
+                selectedIndex--;
+                Repaint();
+            }
+        }
+
         GUILayout.EndScrollView();
 
         GUI.backgroundColor = originalColor;
