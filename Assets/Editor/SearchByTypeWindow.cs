@@ -7,31 +7,17 @@ using System.Linq;
 public class SearchByTypeWindow : EditorWindow
 {
 	string filterString;
-	bool searched;
+    string selected;
 
     List<string> lastSearch = new List<string>();
 
     Vector2 searchResultsScrollPosition;
-
-
-    string selected;
-
-    private GUISkin skin;
-	
 	
 	[MenuItem("Window/Search By Type &g")]
 	static void CreateWindow()
 	{
 		SearchByTypeWindow window = (SearchByTypeWindow)EditorWindow.GetWindow(typeof(SearchByTypeWindow));
 	}
-
-    void Awake()
-    {
-        Debug.Log("Hello");
-        skin = EditorGUIUtility.Load("Skin.guiskin") as GUISkin;
-        Debug.Log(skin);
-    }
-
 
 	void OnGUI()
 	{
