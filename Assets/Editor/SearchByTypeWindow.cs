@@ -9,6 +9,8 @@ public class SearchByTypeWindow : EditorWindow
 	string filterString;
     string selected;
 
+    string searchingForType;
+
     List<string> lastSearch = new List<string>();
 
     Vector2 searchResultsScrollPosition;
@@ -29,18 +31,29 @@ public class SearchByTypeWindow : EditorWindow
 		filterString = EditorGUILayout.TextField("", filterString);
         EditorGUILayout.EndHorizontal();
 
+        if(!string.IsNullOrEmpty(searchingForType))
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            GUILayout.Label("Searching for assets with "+searchingForType+" components", GUI.skin.label);
+            EditorGUILayout.EndHorizontal();
+        }
+
         if(GUI.changed)
         {
             Search(filterString);
         }
 
-        GUIStyle style = GUI.skin.label;
+        // TODO: Move this to a config section
+        // TODO: Find out how to make this editor / inspector driven without creating a shitty GUISkin
+        GUIStyle style = new GUIStyle(GUI.skin.label);
         style.normal.background = EditorGUIUtility.whiteTexture;
         style.margin.left = 0;
         style.margin.right = 0;
-        style.margin.top = 0;
-        style.margin.bottom = 0;
+        style.margin.top = -6;
+        style.margin.bottom = -4;
+        style.padding.top = 0;
         style.padding.left = 6;
+        style.padding.bottom = -4;
 
         searchResultsScrollPosition = GUILayout.BeginScrollView(searchResultsScrollPosition);
 		foreach (string guid in lastSearch)
@@ -58,14 +71,24 @@ public class SearchByTypeWindow : EditorWindow
                 style.normal.textColor = Color.black;
             }
 
+            // TODO: Review if a Box would be a better control to use here
             var rect = EditorGUILayout.BeginHorizontal(style);
 
-            EditorGUILayout.LabelField(path, style);
+            var icon = AssetDatabase.GetCachedIcon(path);
+
+            GUILayout.Label(icon, style, GUILayout.Width(24), GUILayout.Height(24));
+
+            var nameToDisplay = path.Substring(path.LastIndexOf("/") + 1);
+            if(nameToDisplay.Contains("."))
+            {
+                nameToDisplay = nameToDisplay.Remove(nameToDisplay.LastIndexOf("."));
+            }
+            EditorGUILayout.LabelField(nameToDisplay, style);
 
             if(Event.current.type == EventType.MouseUp && rect.Contains(Event.current.mousePosition))
             {
                 Debug.Log (path);
-                Selection.activeObject = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
+                Selection.activeObject = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                 selected = guid;
                 Repaint();
             }
@@ -82,6 +105,8 @@ public class SearchByTypeWindow : EditorWindow
         // Only check for a component type if t: appears in the search string
         // AND it isn't one of our keywords (other built in asset type searches)
         //
+        searchingForType = string.Empty;
+
         if(searchString.Contains("t:") && !FILTER_KEYWORDS.Any(searchString.Contains))
         {
             var typeName = searchString.Substring(searchString.IndexOf("t:") + 2);
@@ -105,6 +130,7 @@ public class SearchByTypeWindow : EditorWindow
                 lastSearch.Clear();
                 return;
             }
+            searchingForType = type.Name;
 
             Debug.Log(type.Name);
 
