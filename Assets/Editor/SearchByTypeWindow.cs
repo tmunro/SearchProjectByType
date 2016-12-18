@@ -68,7 +68,7 @@ public class SearchByTypeWindow : EditorWindow
             }
             else
             {
-                GUI.backgroundColor = new Color(0.75f, 0.75f, 0.75f);
+                GUI.backgroundColor = new Color(0.78f, 0.78f, 0.78f);
                 style.normal.textColor = Color.black;
             }
 
@@ -91,24 +91,50 @@ public class SearchByTypeWindow : EditorWindow
         GUI.backgroundColor = originalColor;
 	}
 
-	private void Search(string typeName)
+	private void Search(string searchString)
 	{
-
-        // Taken from http://stackoverflow.com/questions/11107536/convert-string-to-type-in-c-sharp
-        // Searches all loaded assemblies for the type specified
-        var type = System.AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).FirstOrDefault(x => x.Name == typeName);
-
-        if(type == null)
+        // Only check for a component type if t: appears in the search string
+        // AND it isn't one of our keywords (other built in asset type searches)
+        //
+        var searchByType = false;
+        if(searchString.Contains("t:") && !FILTER_KEYWORDS.Any(searchString.Contains))
         {
-            lastSearch.Clear();
-            return;
+            var typeName = searchString.Substring(searchString.IndexOf("t:") + 2);
+            Debug.Log("Type: "+typeName);
+            searchString = searchString.Replace(typeName, "Prefab");
+            Debug.Log("Search: "+searchString);
+
+            // Taken from http://stackoverflow.com/questions/11107536/convert-string-to-type-in-c-sharp
+            // Searches all loaded assemblies for the type specified
+            var types = System.AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).Where(x => x.IsSubclassOf(typeof(Component)));
+            // Try to find an exact match
+            System.Type type = types.FirstOrDefault(x => x.Name == typeName);
+            // If that fails, try to find a partial match
+            if(type == null)
+            {
+                type = types.FirstOrDefault(x => x.Name.StartsWith(typeName));
+            }
+
+
+            if(type == null)
+            {
+                lastSearch.Clear();
+                return;
+            }
+
+            Debug.Log(type.Name);
+
+
+
+            // Only search for prefabs, since they are the only assets that can contain components
+            // We'll eventually want to filter for scriptable objects as well
+            lastSearch = AssetDatabase.FindAssets (searchString)
+                .Where(x => AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(x)).GetComponent(type) != null)
+                .ToList();
         }
-        
-        // Only search for prefabs, since they are the only assets that can contain components
-        // We'll eventually want to filter for scriptable objects as well
-		lastSearch = AssetDatabase.FindAssets ("t:Prefab")
-			.Where(x => AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(x)).GetComponent(type) != null)
-            .ToList();
+
 	}
+
+    readonly string[] FILTER_KEYWORDS = {"t:Scene", "t:Material"};
 
 }
