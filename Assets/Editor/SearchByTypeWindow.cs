@@ -15,6 +15,11 @@ public class SearchByTypeWindow : EditorWindow
     List<string> lastSearch = new List<string>();
 
     Vector2 searchResultsScrollPosition;
+
+    readonly Color HIGHLIGHT_COLOR = new Color(0.25f, 0.5f, 0.9f);
+    readonly Color DEFOCUSED_HIGHLIGHT_COLOR = new Color(0.55f, 0.55f, 0.55f);
+
+    readonly string[] FILTER_KEYWORDS = {"t:Animation", "t:AudioClip", "t:Font", "t:GUISkin", "t:Mesh", "t:Model", "t:PhysicMaterial", "t:Script", "t:Shader", "t:Texture", "t:Scene", "t:Material"};
 	
 	[MenuItem("Window/Search By Type &g")]
 	static void CreateWindow()
@@ -25,11 +30,30 @@ public class SearchByTypeWindow : EditorWindow
 	void OnGUI()
 	{
         //GUI.skin = skin;
+        
+
+        var test = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector);
+        
+        var focused = EditorWindow.focusedWindow == this;
 
         var originalColor = GUI.backgroundColor;
 
         EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-		filterString = EditorGUILayout.TextField("", filterString);
+		filterString = EditorGUILayout.TextField("", filterString, test.FindStyle("ToolbarSeachTextField"));
+        if(!string.IsNullOrEmpty(filterString))
+        {
+            if(GUILayout.Button("", GUI.skin.FindStyle("ToolbarSeachCancelButton")))
+            {
+                // Remove focus if cleared
+                filterString = "";
+                GUI.FocusControl(null);
+            }
+        }
+        else
+        {
+            GUILayout.Button("", GUI.skin.FindStyle("ToolbarSeachCancelButtonEmpty"));
+        }
+        
         EditorGUILayout.EndHorizontal();
 
         if(!string.IsNullOrEmpty(searchingForType))
@@ -56,17 +80,17 @@ public class SearchByTypeWindow : EditorWindow
         style.padding.left = 6;
         style.padding.bottom = -4;
 
+        //style = GUI.skin.FindStyle("PreBackground");
+
         searchResultsScrollPosition = GUILayout.BeginScrollView(searchResultsScrollPosition);
 		for(var i = 0; i < lastSearch.Count; i++)
         {
             var guid = lastSearch[i];
             var path = AssetDatabase.GUIDToAssetPath(guid);
 
-            if(guid == selected || i == selectedIndex)
+            if(guid == selected || i == selectedIndex) // || Selection.assetGUIDs[0] == guid)
             {
-                Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
-                selected = guid;
-                GUI.backgroundColor = new Color(0.25f, 0.5f, 0.9f);
+                GUI.backgroundColor = focused ? HIGHLIGHT_COLOR : DEFOCUSED_HIGHLIGHT_COLOR;
                 style.normal.textColor = Color.white;
             }
             else
@@ -90,13 +114,11 @@ public class SearchByTypeWindow : EditorWindow
             EditorGUILayout.LabelField(nameToDisplay, style);
 
             if(Event.current.type == EventType.MouseUp && rect.Contains(Event.current.mousePosition))
+            //if(GUILayout.Button(new GUIContent(nameToDisplay, icon)))
             {
                 Debug.Log (path);
                 GUI.FocusControl("");
-                Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
-                selected = guid;
-                selectedIndex = i;
-                Repaint();
+                SetSelected(i);
             }
 
             EditorGUILayout.EndHorizontal();
@@ -106,15 +128,11 @@ public class SearchByTypeWindow : EditorWindow
         {
             if(Event.current.keyCode == KeyCode.DownArrow)
             {
-                Event.current.Use();
-                selectedIndex++;
-                Repaint();
+                SetSelected(selectedIndex + 1);
             }
             else if(Event.current.keyCode == KeyCode.UpArrow)
             {
-                Event.current.Use();
-                selectedIndex--;
-                Repaint();
+                SetSelected(selectedIndex - 1);
             }
         }
 
@@ -122,6 +140,18 @@ public class SearchByTypeWindow : EditorWindow
 
         GUI.backgroundColor = originalColor;
 	}
+
+    void SetSelected(int index)
+    {
+                Event.current.Use();
+        if(index < 0 || index >= lastSearch.Count)
+            return;
+
+                GUI.changed = true;
+        selected = lastSearch[index];
+        selectedIndex = index;
+        Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(selected));
+    }
 
 	private void Search(string searchString)
 	{
@@ -171,6 +201,5 @@ public class SearchByTypeWindow : EditorWindow
 
 	}
 
-    readonly string[] FILTER_KEYWORDS = {"t:Animation", "t:AudioClip", "t:Font", "t:GUISkin", "t:Mesh", "t:Model", "t:PhysicMaterial", "t:Script", "t:Shader", "t:Texture", "t:Scene", "t:Material"};
 
 }
